@@ -1,5 +1,6 @@
 import numpy as np
 from matplotlib import pyplot as plt
+from collections import Counter
 
 import torch
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -14,8 +15,16 @@ def summary_mnist(train_labels, test_labels, labels_list):
     >>> summary_mnist([0, 1, 2, 2, 1, 0, 0, 0, 2], [2, 0, 1, 1], range(3))
     {'train_labels_counts': [4, 2, 3], 'test_labels_counts': [1, 2, 1]}
     """
+    train_counts = Counter(train_labels)
+    test_counts = Counter(test_labels)
 
-    return {}
+    train_labels_counts = [train_counts[label] for label in labels_list]
+    test_labels_counts = [test_counts[label] for label in labels_list]
+
+    return {
+        "train_labels_counts": train_labels_counts,
+        "test_labels_counts": test_labels_counts,
+    }
 
 def build_mnist_model(hidden_size, dropout_rate=0):
     """Return a Keras model that has 1 hidden layer based on these parameters:
@@ -42,7 +51,15 @@ def build_mnist_model(hidden_size, dropout_rate=0):
     >>> model[2].p
     0.5
 """
-    return None
+    layers = [
+        nn.Linear(28 * 28, hidden_size),
+        nn.ReLU()
+    ]
+    if dropout_rate > 0:
+        layers.append(nn.Dropout(dropout_rate))
+    layers.append(nn.Linear(hidden_size, 10))
+
+    return nn.Sequential(*layers)
 
 if __name__ == "__main__":
     import doctest
